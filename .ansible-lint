@@ -1,0 +1,8 @@
+exclude_paths:
+  - molecule/
+
+skip_list:
+  - 'unknown-module'
+  - 'name[template]'
+  - 'no-changed-when'
+  - 'risky-shell-pipe'

@@ -1,0 +1,53 @@
+---
+
+- name: "Ensure secrets for basic auth {{ item.secretName }} is {{ item.state }}"
+  kubernetes.core.k8s:
+    kubeconfig: "{{ traefik_basic_auth_kubeconfig }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ item.secretName }}"
+        namespace: "{{ item.namespace }}"
+      type: "kubernetes.io/basic-auth"
+      data:
+        username: "{{ item.username | b64encode }}"
+        password: "{{ item.password | b64encode }}"
+      state: "{{ item.state }}"
+
+- name: "Ensure traefik middleware {{ item.middlewareName }} is {{ item.state }}"
+  kubernetes.core.k8s:
+    kubeconfig: "{{ traefik_basic_auth_kubeconfig }}"
+    definition:
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: Middleware
+      metadata:
+        name: "{{ item.middlewareName }}"
+        namespace: "{{ item.namespace }}"
+      spec:
+        basicAuth:
+          secret: "{{ item.secretName }}"
+    state: "{{ item.state }}"
+
+- name: "Ensure traefik middleware route {{ item.middlewareName }} is {{ item.state }}"
+  kubernetes.core.k8s:
+    kubeconfig: "{{ traefik_basic_auth_kubeconfig }}"
+    definition:
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: IngressRoute
+      metadata:
+        name: "{{ item.middlewareName }}"
+        namespace: "{{ item.namespace }}"
+      spec:
+        entryPoints:
+          - web
+        routes:
+          - kind: Rule
+            match: "Host(`{{ item.hostname }}`)"
+            middlewares:
+              - name: "{{ item.middlewareName }}"
+            services:
+              - kind: Service
+                name: "{{ item.serviceName }}"
+                port: "{{ item.servicePort }}"
+    state: "{{ item.state }}"

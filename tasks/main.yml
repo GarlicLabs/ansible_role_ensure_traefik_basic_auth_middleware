@@ -1,0 +1,15 @@
+---
+
+- name: Get ingressClass name
+  ansible.builtin.shell: kubectl get ingressClass -o json | jq --join-output '.items | .[] | .metadata | .name'
+  register: "ingress_class_name"
+
+- name: Check if traefik is ingressClassName 
+  ansible.builtin.fail:
+    msg: '{{ ingressClassName.stdout }} is not traefik'
+  when: ingress_class_name.stdout != "traefik"
+
+- name: Ensure basic auth state
+  ansible.builtin.include_tasks: ensure_basic_auth_state.yml
+  when: traefik_basic_auth_items is defined
+  with_items: "{{ traefik_basic_auth_items }}"

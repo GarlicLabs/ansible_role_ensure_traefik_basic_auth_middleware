@@ -1,0 +1,14 @@
+---
+
+traefik_basic_auth_kubeconfig: "{{ undef(hint='You need to provide a kubeconfig') }"
+
+traefik_basic_auth_items: []
+  # - secretName: nginx-basic-auth-secret
+  #   namespace: default
+  #   middlewareName: nginx-basic-auth
+  #   state: "present"
+  #   username: 
+  #   password: 
+  #   hostname: "nginx.example.com"
+  #   serviceName: nginx
+  #   servicePort: 80

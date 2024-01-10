@@ -1,0 +1,44 @@
+name: Validate infrastructure as code
+
+on:
+  push:
+    branches:
+      - "dev"
+      - "main"
+  pull_request:
+    branches:
+      - "dev"
+      - "main"
+  schedule:
+    - cron: "0 7 * * 0"
+jobs:
+  Linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@cc7f2f599318aa344fca575c635c2caa6d492a14
+
+  Security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure results dir
+        run: mkdir -p kics-results/
+      - name: Run kics scan
+        uses: checkmarx/kics-github-action@3f21d96af19575aae6bf83ebdd7dee91d02fa746
+        with:
+          path: ./
+          output_path: kics-results/
+          fail_on: high,medium
+          type: Ansible
+      - name: Remove results directory
+        run: rm -rf kics-results/
+
+  Deprications:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure pluto is present
+        uses: FairwindsOps/pluto/github-action@ba8fec507d0e5ae0960530a60cd519875704a4b3
+      - name: Find deprecations
+        run: pluto detect-files -d ./
